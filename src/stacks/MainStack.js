@@ -8,7 +8,12 @@ import MainScreen from '../views/MainScreen';
 const Stack = createStackNavigator();
 
 export default () => (
-  <Stack.Navigator>
+  <Stack.Navigator
+    initialRouteName="SplashScreen"
+    screenOptions={{
+      headerShown: false
+    }}
+  >
     <Stack.Screen name="SplashScreen" component={SplashScreen}/>
     <Stack.Screen name="SignInScreen" component={SignInScreen}/>
     <Stack.Screen name="MainScreen" component={MainScreen}/>
