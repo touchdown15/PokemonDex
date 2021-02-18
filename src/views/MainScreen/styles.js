@@ -37,7 +37,10 @@ const styles = StyleSheet.create({
 
   pokemon:{
     flexDirection: 'row',
-    paddingVertical: 15
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: 'black',
+    marginBottom: 10
   },
 
   pokemonViewImg:{
@@ -45,8 +48,8 @@ const styles = StyleSheet.create({
   },
 
   pokemonImg:{
-    width: 50,
-    height: 50
+    width: 80,
+    height: 80
   },
 
   pokemonBody:{
