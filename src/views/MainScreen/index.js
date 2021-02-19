@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { 
   Text,
   View,
@@ -8,7 +9,6 @@ import {
   SafeAreaView,
   TouchableOpacity
 } from 'react-native';
-
 import styles from './styles'
 
 const listTab = [
@@ -23,71 +23,36 @@ const listTab = [
   },
 ]
 
-const pokemonURL = "https://pokeapi.co/api/v2/pokemon";
-
 export default () => {
 
+  const navigation = useNavigation();
+
   const [isLoading, setLoading] = useState(true);
+  const [pagesPokemon, setPagesPokemon] = useState(0);
+  const [table, setTable] = useState('Todos');
   const [pokemons, setPokemons] = useState([]);
-  const [dataPokemon, setDataPokemon] = useState([]);
+  
+  const pokemonURL = "https://pokeapi.co/api/v2/pokemon?limit=20&offset="+pagesPokemon;
+
+  const setTableFilter = table => {
+    setTable(table)
+  }
 
   useEffect(()=>{
-    
-    /*fetch(pokemonURL)
-      .then((response) => response.json())
-      .then((json) => setPokemons(json.results))
-      .catch((err) => alert(err))
-      .finally(() => setLoading(false));*/   
-
-
-
-    /*fetch(pokemonURL)
-      .then(response => response.json())
-      .then(data => {
-        let results = data.results;
-        setPokemons({ pokemonArray : [...results]})
-        console.log("Here are my pokemons",   pokemons.pokemonArray)
-      });*/
-
+   
     fetch(pokemonURL)
     .then(response => response.json())
     .then(data => {
-      let results = data.results;
-      let promisesArray = results.map(result => {
+      const results = data.results;
+      const promisesArray = results.map(result => {
         return fetch(result.url).then(response => response.json());
       })
       return Promise.all(promisesArray);
-    }).then((data) => setPokemons(data))
+    }).then((data) => setPokemons([...pokemons, ...data]))
     .catch((err) => alert(err))
     .finally(() => setLoading(false));
-   
-    /*setPokemons({ pokemon: data }, () => console.log('Main Pokemon State: ', pokemons.pokemon))*/
-
-    /*fetch(pokemonURL)
-      .then(response => response.json())
-      .then(data => {
-        let results = data.results;
-        let promisesArray = results.map((result) => {
-          return fetch(result.url).then((response) => response.json());
-        });
-        return Promise.all(promisesArray);
-      })
-      .then((data) => console.log(data.weight) setPokemons(data));*/
-    
-      //.then((data) => setPokemons(data))
-
-      /*{ pokemon: data }, () => console.log ('Main pokemon State: ', this.state.pokemon)*/
-
-      /*{
-        fetch(json.results.url)
-          .then((responsed) => responsed.json())
-          .then((jsoned) => setPokemons(jsoned))
-          .catch((err) => alert(err)) 
-      })
-      .catch ((error) => alert (error))
-      .finally(() => setLoading(false));*/
-      
-  })
+  
+  }, [pagesPokemon])
 
   const renderPokemon = ({item}) =>{
     return(
@@ -98,23 +63,25 @@ export default () => {
             source={{uri: item.sprites.front_default}} 
           />
         </View>
-        <View style={styles.pokemonBody}>
-          <Text style={styles.pokemonName}>
-            Nome: {item.name}
-          </Text>
-          <Text style={styles.pokemonName}>
-            Tipo: {item.types[0].type.name}
-          </Text>
-        </View>
+        <TouchableOpacity
+          onPress={() => navigation.push('DetailScreen' , item)}
+        >
+          <View style={styles.pokemonBody}>
+            <Text style={styles.pokemonName}>
+              Nome: {item.name}
+            </Text>
+            <Text style={styles.pokemonName}>
+              Tipo: {item.types[0].type.name}
+            </Text>
+          </View>
+        </TouchableOpacity>
       </View>
     )
   }
 
-  const [table, setTable] = useState('Todos')
-
-  const setTableFilter = table => {
-    setTable(table)
-  }
+  const handleLoadMore = () =>{
+    setPagesPokemon(pagesPokemon + 20)
+  } 
 
   return(
     <SafeAreaView style={styles.container}>
@@ -139,11 +106,12 @@ export default () => {
         /> : 
         <FlatList
           data={pokemons}
-          keyExtractor={({id}, index) => id}
-          renderItem={renderPokemon} 
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={renderPokemon}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.1}
         />
       }
-
     </SafeAreaView>
   );
 }
