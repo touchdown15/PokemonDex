@@ -7,7 +7,8 @@ import {
   ActivityIndicator,
   Image,
   SafeAreaView,
-  TouchableOpacity
+  TouchableOpacity,
+  TextInput
 } from 'react-native';
 import styles from './styles'
 
@@ -30,8 +31,10 @@ export default () => {
   const [isLoading, setLoading] = useState(true);
   const [pagesPokemon, setPagesPokemon] = useState(0);
   const [table, setTable] = useState('Todos');
+  const [searchTerm, setSearchTerm] = useState('');
   const [pokemons, setPokemons] = useState([]);
-  
+  const [filteredPokemons, setFilteredPokemons] = useState([]);
+
   const pokemonURL = "https://pokeapi.co/api/v2/pokemon?limit=20&offset="+pagesPokemon;
 
   const setTableFilter = table => {
@@ -39,7 +42,6 @@ export default () => {
   }
 
   useEffect(()=>{
-   
     fetch(pokemonURL)
     .then(response => response.json())
     .then(data => {
@@ -51,8 +53,15 @@ export default () => {
     }).then((data) => setPokemons([...pokemons, ...data]))
     .catch((err) => alert(err))
     .finally(() => setLoading(false));
-  
   }, [pagesPokemon])
+
+  useEffect(() =>{
+    setFilteredPokemons(
+      pokemons.filter( pokemon => {
+        return pokemon.name.toLowerCase().includes( searchTerm.toLowerCase() )
+      })
+    )
+  },[searchTerm, pokemons])
 
   const renderPokemon = ({item}) =>{
     return(
@@ -70,9 +79,13 @@ export default () => {
             <Text style={styles.pokemonName}>
               Nome: {item.name}
             </Text>
-            <Text style={styles.pokemonName}>
-              Tipo: {item.types[0].type.name}
-            </Text>
+            <View>
+              {item.types.map(types =>(
+                <Text style={styles.pokemonName}>
+                  Tipo: {types.type.name}
+                </Text>
+              ))}
+            </View>
           </View>
         </TouchableOpacity>
       </View>
@@ -99,13 +112,21 @@ export default () => {
           ))
         }
       </View>
+
+      <View>
+        <TextInput
+          type='text'
+          placeholder='Search Here...'
+          onChangeText={text => setSearchTerm(text)}
+        />
+      </View>
       
       {isLoading ? 
         <ActivityIndicator
           size="large" color="#E63F34"
         /> : 
         <FlatList
-          data={pokemons}
+          data={filteredPokemons}
           keyExtractor={(item, index) => index.toString()}
           renderItem={renderPokemon}
           onEndReached={handleLoadMore}
@@ -115,3 +136,5 @@ export default () => {
     </SafeAreaView>
   );
 }
+
+/*Flatlist data={pokemons}*/
