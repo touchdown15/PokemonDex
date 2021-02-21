@@ -10,7 +10,9 @@ import {
   TouchableOpacity,
   TextInput
 } from 'react-native';
-import styles from './styles'
+import styles from './styles';
+
+import AsyncStorage from '@react-native-community/async-storage';
 
 const listTab = [
   {
@@ -24,6 +26,8 @@ const listTab = [
   },
 ]
 
+const STORAGE_KEY = '@save_user';
+
 export default () => {
 
   const navigation = useNavigation();
@@ -35,7 +39,39 @@ export default () => {
   const [pokemons, setPokemons] = useState([]);
   const [filteredPokemons, setFilteredPokemons] = useState([]);
 
+  const [userInfo, setUserInfo] = useState(
+    {
+      nome: '',
+      idade: null,
+      sexo: null,
+      favoritos: [],
+      capturados: [],
+    }
+  )
+
   const pokemonURL = "https://pokeapi.co/api/v2/pokemon?limit=20&offset="+pagesPokemon;
+
+  const readData = async () => {
+    try {
+      const userInfo = await AsyncStorage.getItem(STORAGE_KEY)
+      const objUserInfo = JSON.parse(userInfo)
+      if (objUserInfo.idade !== null) {
+        console.log('nome: ' + objUserInfo.nome + ' idade: ' + objUserInfo.idade+ ' sexo: ' +objUserInfo.sexo)
+        setUserInfo(objUserInfo)
+      }
+    } catch (e) {
+      alert('Failed to fetch the data from storage')
+    }
+  }
+
+  const saveData = async () => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(userInfo))
+      alert('Data successfully saved ')
+    } catch (e) {
+      alert('Failed to save the data to the storage')
+    }
+  }
 
   const setTableFilter = table => {
     setTable(table)
@@ -63,6 +99,14 @@ export default () => {
     )
   },[searchTerm, pokemons])
 
+  useEffect(()=>{
+    readData()
+  }, [])
+
+  /*useEffect(()=>{
+    console.log('nome: '+userInfo.nome +' idade: ' + userInfo.idade + ' sexo: ' + userInfo.sexo + ' favorito: ' + userInfo.favoritos[0].name);
+  }, [userInfo]);*/
+
   const renderPokemon = ({item}) =>{
     return(
       <View style={styles.pokemon}>
@@ -87,6 +131,27 @@ export default () => {
               ))}
             </View>
           </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={()=>{
+            setUserInfo({
+            ...userInfo,
+            favoritos: [item],
+          })
+          saveData()
+        }}
+        >
+          <Text>Favoritar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={()=>{setUserInfo({
+            ...userInfo,
+            capturados: [item],
+          })
+          saveData()
+        }}
+        >
+          <Text>Capturar</Text>
         </TouchableOpacity>
       </View>
     )
